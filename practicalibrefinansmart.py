@@ -48,7 +48,7 @@ st.markdown("""
 # ============================================================================
 st.markdown("""
     <h1 class='main-header'>
-        💼 FinRisk Pro - Grupo 10
+        💼 FinRisk Pro
     </h1>
 """, unsafe_allow_html=True)
 
