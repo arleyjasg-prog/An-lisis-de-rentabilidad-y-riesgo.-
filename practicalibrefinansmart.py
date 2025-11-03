@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 FinRisk Pro - Análisis Profesional de Portafolios
-Grupo 10 - Ingeniería Financiera
+Ingeniería Financiera
 """
 
 import streamlit as st
