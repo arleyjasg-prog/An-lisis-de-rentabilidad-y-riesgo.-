@@ -194,42 +194,4 @@ if st.button("🚀 Calcular Rentabilidad y Riesgo", type="primary", use_containe
                 st.pyplot(fig1)
                 
                 st.markdown("---")
-                
-                # ================================================================
-                # CÁLCULO DE RENTABILIDADES
-                # ================================================================
-                rent_diaria = data.pct_change().dropna()
-                
-                # ================================================================
-                # SECCIÓN 2: ANÁLISIS DE RETORNOS
-                # ================================================================
-                st.header("2️⃣ Análisis de Retornos Diarios")
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.subheader("📊 Estadísticas Descriptivas")
-                    st.dataframe(
-                        rent_diaria.describe().style.format("{:.4f}"),
-                        use_container_width=True
-                    )
-                
-                with col2:
-                    st.subheader("📉 Retornos Diarios")
-                    fig2, ax2 = plt.subplots(figsize=(10, 6))
-                    for col in rent_diaria.columns:
-                        ax2.plot(rent_diaria.index, rent_diaria[col], 
-                                label=col, alpha=0.7, linewidth=1)
-                    ax2.set_title('Retornos Diarios', fontsize=14, fontweight='bold')
-                    ax2.set_xlabel('Fecha')
-                    ax2.set_ylabel('Retorno')
-                    ax2.legend(loc='best')
-                    ax2.grid(True, alpha=0.3)
-                    ax2.axhline(y=0, color='r', linestyle='--', alpha=0.5)
-                    plt.tight_layout()
-                    st.pyplot(fig2)
-                
-                st.markdown("---")
-                
-                # ================================================================
-            
+    
