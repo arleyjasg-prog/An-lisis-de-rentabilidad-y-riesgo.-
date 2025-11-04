@@ -1,72 +1,119 @@
+[8:58 p.m., 3/11/2025] Angie Libeth Ropero: # -- coding: utf-8 --
+"""
+FinSight - Analizador de Rentabilidad y Riesgo Empresarial
+Aplicación Streamlit para análisis financiero de empresas
+Autor: Angie, Dayana y Jhony
+Versión: 2.0 (con barra lateral y comparación múltiple)
+"""
+
+# ==========================
+# 📦 Importaciones necesarias
+# ==========================
 import streamlit as st
-import pandas as pd
 import yfinance as yf
-from datetime import date
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# --- Configuración de la Página y Título ---
-st.set_page_config(page_title="Análisis de Portafolio", layout="wide")
-st.title("📈 Analizador de Rentabilidad y Riesgo de Activos")
-st.header("Compara el rendimiento de hasta dos activos financieros")
-st.write("Introduce los tickers de los activos (ej. AAPL, MSFT, GOOGL, BTC-USD) y un rango de fechas para analizar.")
+# ==========================
+# 🎨 Configuración visual y de página
+# ==========================
+st.set_page_config(page_title="FinSight", page_icon="💼", layout="wide")
 
-# --- Barra Lateral (Sidebar) para Entradas de Usuario ---
-st.sidebar.header("Parámetros de Análisis")
-start_date = st.sidebar.date_input('Fecha de Inicio', date(2020, 1, 1))
-end_date = st.sidebar.date_input('Fecha de Fin', date.today())
-ticker1 = st.sidebar.text_input('Ticker 1', 'AAPL').upper()
-ticker2 = st.sidebar.text_input('Ticker 2 (Opcional)', 'MSFT').upper()
-run_button = st.sidebar.button("Analizar Activos")
+st.markdown("""
+    <style>
+        .main { background-color: #f9f9fb; }
+        h1, h2, h3 { color: #1f4e79; }
+        .stButton>button {…
+[9:05 p.m., 3/11/2025] Angie Libeth Ropero: # -- coding: utf-8 --
+"""
+FinSight - Analizador de Rentabilidad y Riesgo Empresarial
+Aplicación Streamlit para análisis financiero de empresas
+"""
 
-# --- Lógica Principal de la App ---
-if run_button:
-    # 1. Crear lista de tickers y descargar datos
-    tickers_list = [ticker1]
-    if ticker2:
-        tickers_list.append(ticker2)
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-    st.header(f"Análisis Comparativo para: {', '.join(tickers_list)}")
+# ⚙️ Configuración de página
+st.set_page_config(page_title="FinSight", page_icon="💼", layout="wide")
 
-    try:
-        data = yf.download(tickers_list, start=start_date, end=end_date)['Close']
-        
-        # Manejar el caso de un solo ticker para que la estructura de datos sea consistente
-        if len(tickers_list) == 1:
-            data = data.to_frame(name=tickers_list[0])
+# 🎯 Encabezado principal
+st.title("💼 FinSight – Analizador de Rentabilidad y Riesgo Empresarial")
+st.markdown("Explora el desempeño financiero de distintas empresas a través de indicadores de *rentabilidad* y *riesgo*.")
+st.divider()
 
-        if data.empty:
-            st.error("No se encontraron datos para los tickers o el rango de fechas seleccionado. Por favor, verifica.")
-        else:
-            st.success("Datos descargados correctamente.")
+# 🔍 Entrada del usuario
+ticker = st.text_input("📊 Ingresa el ticker de la empresa (por ejemplo: AAPL, MSFT, NVDA):", "AAPL")
+col1, col2 = st.columns(2)
+with col1:
+    start_date = st.date_input("📅 Fecha inicial:", pd.to_datetime("2020-01-01"))
+with col2:
+    end_date = st.date_input("📅 Fecha final:", pd.to_datetime("2024-12-31"))
 
-            # 2. Cálculos de Rentabilidad y Riesgo
-            daily_returns = data.pct_change().dropna()
-            cumulative_returns = (1 + daily_returns).cumprod() - 1
+# 🚀 Botón de análisis
+if st.button("Analizar"):
+    with st.spinner("Descargando datos financieros..."):
+        data = yf.download(ticker, start=start_date, end=end_date, progress=False)
 
-            # 3. Mostrar Métricas Clave
-            st.subheader("Métricas Clave (Anualizadas)")
-            cols = st.columns(len(tickers_list))
-            for i, ticker in enumerate(tickers_list):
-                with cols[i]:
-                    st.markdown(f"### {ticker}")
-                    
-                    annual_return = daily_returns[ticker].mean() * 252
-                    st.metric(label="Rentabilidad Anualizada", value=f"{annual_return:.2%}")
-                    
-                    annual_volatility = daily_returns[ticker].std() * (252**0.5)
-                    st.metric(label="Volatilidad Anualizada (Riesgo)", value=f"{annual_volatility:.2%}")
-                    
-                    sharpe_ratio = annual_return / annual_volatility if annual_volatility != 0 else 0
-                    st.metric(label="Ratio de Sharpe", value=f"{sharpe_ratio:.2f}")
+    # Verificación de datos
+    if data.empty:
+        st.error("❌ No se encontraron datos para el ticker especificado. Verifica que sea válido.")
+        st.stop()
 
-            # 4. Visualizaciones
-            st.subheader("Evolución de la Rentabilidad Acumulada")
-            st.line_chart(cumulative_returns)
+    st.success(f"✅ Datos descargados exitosamente para *{ticker}*")
 
-            st.subheader("Datos Históricos (Precio de Cierre)")
-            st.dataframe(data.style.format("{:.2f}"))
-            
-            st.subheader("Rentabilidades Diarias")
-            st.dataframe(daily_returns.style.format("{:.2%}"))
+    # 🧮 Asegurar que las columnas sean planas (a veces vienen en MultiIndex)
+    if isinstance(data.columns, pd.MultiIndex):
+        data.columns = data.columns.get_level_values(0)
 
-    except Exception as e:
-        st.error(f"Ocurrió un error: {e}. Asegúrate de que los tickers son válidos.")
+# Verificar que exista la columna 'Close'
+if "Close" in data.columns:
+    price_col = "Close"
+else:
+    st.error("❌ No se encontró la columna de precios 'Close'.")
+    st.stop()
+
+
+    # 📈 Cálculos de rentabilidad y riesgo
+    data["Daily Return"] = data[price_col].pct_change()
+    avg_return = data["Daily Return"].mean()
+    std_dev = data["Daily Return"].std()
+    sharpe_ratio = avg_return / std_dev if std_dev != 0 else 0
+
+    # 📊 Mostrar métricas
+    st.subheader("📈 Indicadores de Rentabilidad y Riesgo")
+    metrics_df = pd.DataFrame({
+        'Indicador': ['Rentabilidad promedio (%)', 'Riesgo (Desviación estándar %)', 'Sharpe Ratio'],
+        'Valor': [avg_return * 100, std_dev * 100, sharpe_ratio]
+    })
+    st.table(metrics_df.style.format({'Valor': '{:.2f}'}))
+
+    # 🕰 Evolución del precio
+    st.subheader("📉 Evolución del Precio Ajustado")
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(data[price_col], color='royalblue', linewidth=2)
+    ax.set_title(f"Precio histórico de {ticker}", fontsize=14)
+    ax.set_xlabel("Fecha")
+    ax.set_ylabel("Precio ($)")
+    ax.grid(True, alpha=0.3)
+    st.pyplot(fig)
+
+    # 🔢 Histograma de rendimientos
+    st.subheader("📊 Distribución de los Rendimientos Diarios")
+    fig2, ax2 = plt.subplots(figsize=(8, 4))
+    sns.histplot(data["Daily Return"].dropna(), bins=30, kde=True, ax=ax2, color='teal')
+    ax2.set_title("Distribución de Retornos Diarios")
+    st.pyplot(fig2)
+
+    # 🧾 Datos adicionales
+    st.subheader("🧾 Vista previa de los datos")
+    st.dataframe(data.tail(), use_container_width=True)
+
+# 🪪 Footer
+st.markdown("---")
+st.markdown("Desarrollado con ❤️ por *Angie* | Fuente de datos: Yahoo Finance")
