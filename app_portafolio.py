@@ -122,11 +122,12 @@ elif opcion == "Análisis comparativo":
             col2.metric(f"Rentabilidad {ticker2}", f"{avg2*100:.2f}%")
             col3.metric("Correlación", f"{corr:.2f}")
 
-            # 📈 Gráfico comparativo
+            # 📈 Gráfico comparativo (corregido)
             st.subheader("📉 Comparación de precios históricos")
             fig, ax = plt.subplots(figsize=(10, 5))
-            ax.plot(data1["Adj Close"], label=ticker1, linewidth=2)
-            ax.plot(data2["Adj Close"], label=ticker2, linewidth=2)
+            for df, ticker in [(data1, ticker1), (data2, ticker2)]:
+                price_col = "Adj Close" if "Adj Close" in df.columns else "Close"
+                ax.plot(df[price_col], label=ticker, linewidth=2)
             ax.set_title("Evolución de precios ajustados")
             ax.legend()
             st.pyplot(fig)
