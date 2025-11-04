@@ -1,14 +1,4 @@
-[8:58 p.m., 3/11/2025] Angie Libeth Ropero: # -- coding: utf-8 --
-"""
-FinSight - Analizador de Rentabilidad y Riesgo Empresarial
-Aplicación Streamlit para análisis financiero de empresas
-Autor: Angie, Dayana y Jhony
-Versión: 2.0 (con barra lateral y comparación múltiple)
-"""
-
-# ==========================
-# 📦 Importaciones necesarias
-# ==========================
+# 💼 FinSight – Analizador de Rentabilidad y Riesgo Empresarial (Versión extendida)
 import streamlit as st
 import yfinance as yf
 import pandas as pd
@@ -16,104 +6,149 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# ==========================
-# 🎨 Configuración visual y de página
-# ==========================
 st.set_page_config(page_title="FinSight", page_icon="💼", layout="wide")
 
+# 💠 Estilos personalizados
 st.markdown("""
     <style>
-        .main { background-color: #f9f9fb; }
-        h1, h2, h3 { color: #1f4e79; }
-        .stButton>button {…
-[9:05 p.m., 3/11/2025] Angie Libeth Ropero: # -- coding: utf-8 --
-"""
-FinSight - Analizador de Rentabilidad y Riesgo Empresarial
-Aplicación Streamlit para análisis financiero de empresas
-"""
+    .main {
+        background-color: #F9FAFB;
+    }
+    h1, h2, h3 {
+        color: #002B5B;
+    }
+    .stButton>button {
+        background-color: #0078D7;
+        color: white;
+        border-radius: 10px;
+        height: 3em;
+        font-weight: bold;
+    }
+    footer {visibility: hidden;}
+    </style>
+""", unsafe_allow_html=True)
 
-import streamlit as st
-import yfinance as yf
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+# 🧭 Encabezado principal
+st.markdown("<h1 style='text-align: center;'>💼 FinSight</h1>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align: center; color: gray;'>Analizador de Rentabilidad y Riesgo Empresarial</h4>", unsafe_allow_html=True)
+st.markdown("---")
 
-# ⚙️ Configuración de página
-st.set_page_config(page_title="FinSight", page_icon="💼", layout="wide")
+# 📂 Navegación
+opcion = st.sidebar.radio("Selecciona una vista:", ["Análisis individual", "Análisis comparativo"])
 
-# 🎯 Encabezado principal
-st.title("💼 FinSight – Analizador de Rentabilidad y Riesgo Empresarial")
-st.markdown("Explora el desempeño financiero de distintas empresas a través de indicadores de *rentabilidad* y *riesgo*.")
-st.divider()
+# =====================================================
+# 📈 VISTA 1: ANÁLISIS INDIVIDUAL
+# =====================================================
+if opcion == "Análisis individual":
+    st.sidebar.header("⚙ Configuración de análisis individual")
+    ticker = st.sidebar.text_input("📊 Ticker de la empresa:", "AAPL")
+    start_date = st.sidebar.date_input("📅 Fecha inicial:", pd.to_datetime("2020-01-01"))
+    end_date = st.sidebar.date_input("📅 Fecha final:", pd.to_datetime("2024-12-31"))
 
-# 🔍 Entrada del usuario
-ticker = st.text_input("📊 Ingresa el ticker de la empresa (por ejemplo: AAPL, MSFT, NVDA):", "AAPL")
-col1, col2 = st.columns(2)
-with col1:
-    start_date = st.date_input("📅 Fecha inicial:", pd.to_datetime("2020-01-01"))
-with col2:
-    end_date = st.date_input("📅 Fecha final:", pd.to_datetime("2024-12-31"))
-
-# 🚀 Botón de análisis
-if st.button("Analizar"):
-    with st.spinner("Descargando datos financieros..."):
+    if st.sidebar.button("Analizar empresa"):
         data = yf.download(ticker, start=start_date, end=end_date, progress=False)
+        if data.empty:
+            st.error("❌ No se encontraron datos para el ticker especificado.")
+        else:
+            st.success(f"✅ Datos descargados correctamente para *{ticker}*")
 
-    # Verificación de datos
-    if data.empty:
-        st.error("❌ No se encontraron datos para el ticker especificado. Verifica que sea válido.")
-        st.stop()
+            # Cálculos
+            price_col = "Adj Close" if "Adj Close" in data.columns else "Close"
+            data["Daily Return"] = data[price_col].pct_change()
+            avg_return = data["Daily Return"].mean()
+            std_dev = data["Daily Return"].std()
+            sharpe_ratio = avg_return / std_dev if std_dev != 0 else 0
 
-    st.success(f"✅ Datos descargados exitosamente para *{ticker}*")
+            # 🎯 Mostrar resultados
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Rentabilidad promedio", f"{avg_return*100:.2f}%")
+            col2.metric("Riesgo (volatilidad)", f"{std_dev*100:.2f}%")
+            col3.metric("Índice de Sharpe", f"{sharpe_ratio:.2f}")
 
-    # 🧮 Asegurar que las columnas sean planas (a veces vienen en MultiIndex)
-    if isinstance(data.columns, pd.MultiIndex):
-        data.columns = data.columns.get_level_values(0)
+            st.markdown("---")
 
-# Verificar que exista la columna 'Close'
-if "Close" in data.columns:
-    price_col = "Close"
-else:
-    st.error("❌ No se encontró la columna de precios 'Close'.")
-    st.stop()
+            # 📉 Gráfico de precios
+            st.subheader("📈 Evolución del precio ajustado")
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(data[price_col], color='#0078D7', linewidth=2)
+            ax.set_title(f"Precio histórico de {ticker}")
+            ax.set_xlabel("Fecha")
+            ax.set_ylabel("Precio ($)")
+            ax.grid(alpha=0.3)
+            st.pyplot(fig)
 
+            # 📊 Distribución de retornos
+            st.subheader("📊 Distribución de los rendimientos diarios")
+            fig2, ax2 = plt.subplots(figsize=(8, 4))
+            sns.histplot(data["Daily Return"].dropna(), bins=30, kde=True, ax=ax2, color='#009688')
+            st.pyplot(fig2)
 
-    # 📈 Cálculos de rentabilidad y riesgo
-    data["Daily Return"] = data[price_col].pct_change()
-    avg_return = data["Daily Return"].mean()
-    std_dev = data["Daily Return"].std()
-    sharpe_ratio = avg_return / std_dev if std_dev != 0 else 0
+            # 🧾 Datos recientes
+            st.subheader("📘 Últimos datos descargados")
+            st.dataframe(data.tail(10), use_container_width=True)
 
-    # 📊 Mostrar métricas
-    st.subheader("📈 Indicadores de Rentabilidad y Riesgo")
-    metrics_df = pd.DataFrame({
-        'Indicador': ['Rentabilidad promedio (%)', 'Riesgo (Desviación estándar %)', 'Sharpe Ratio'],
-        'Valor': [avg_return * 100, std_dev * 100, sharpe_ratio]
-    })
-    st.table(metrics_df.style.format({'Valor': '{:.2f}'}))
+# =====================================================
+# 🏦 VISTA 2: ANÁLISIS COMPARATIVO
+# =====================================================
+elif opcion == "Análisis comparativo":
+    st.sidebar.header("📊 Configuración comparativa")
+    ticker1 = st.sidebar.text_input("Empresa 1:", "AAPL")
+    ticker2 = st.sidebar.text_input("Empresa 2:", "MSFT")
+    start_date = st.sidebar.date_input("📅 Fecha inicial:", pd.to_datetime("2020-01-01"))
+    end_date = st.sidebar.date_input("📅 Fecha final:", pd.to_datetime("2024-12-31"))
 
-    # 🕰 Evolución del precio
-    st.subheader("📉 Evolución del Precio Ajustado")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(data[price_col], color='royalblue', linewidth=2)
-    ax.set_title(f"Precio histórico de {ticker}", fontsize=14)
-    ax.set_xlabel("Fecha")
-    ax.set_ylabel("Precio ($)")
-    ax.grid(True, alpha=0.3)
-    st.pyplot(fig)
+    if st.sidebar.button("Comparar empresas"):
+        data1 = yf.download(ticker1, start=start_date, end=end_date, progress=False)
+        data2 = yf.download(ticker2, start=start_date, end=end_date, progress=False)
 
-    # 🔢 Histograma de rendimientos
-    st.subheader("📊 Distribución de los Rendimientos Diarios")
-    fig2, ax2 = plt.subplots(figsize=(8, 4))
-    sns.histplot(data["Daily Return"].dropna(), bins=30, kde=True, ax=ax2, color='teal')
-    ax2.set_title("Distribución de Retornos Diarios")
-    st.pyplot(fig2)
+        if data1.empty or data2.empty:
+            st.error("❌ Verifica los tickers, no se encontraron datos.")
+        else:
+            st.success(f"✅ Comparando *{ticker1}* y *{ticker2}*")
 
-    # 🧾 Datos adicionales
-    st.subheader("🧾 Vista previa de los datos")
-    st.dataframe(data.tail(), use_container_width=True)
+            # Cálculos
+            for df in [data1, data2]:
+                price_col = "Adj Close" if "Adj Close" in df.columns else "Close"
+                df["Daily Return"] = df[price_col].pct_change()
+
+            # Estadísticas
+            avg1, avg2 = data1["Daily Return"].mean(), data2["Daily Return"].mean()
+            std1, std2 = data1["Daily Return"].std(), data2["Daily Return"].std()
+            corr = data1["Daily Return"].corr(data2["Daily Return"])
+
+            # 🧮 Resultados
+            col1, col2, col3 = st.columns(3)
+            col1.metric(f"Rentabilidad {ticker1}", f"{avg1*100:.2f}%")
+            col2.metric(f"Rentabilidad {ticker2}", f"{avg2*100:.2f}%")
+            col3.metric("Correlación", f"{corr:.2f}")
+
+            # 📈 Gráfico comparativo
+            st.subheader("📉 Comparación de precios históricos")
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(data1["Adj Close"], label=ticker1, linewidth=2)
+            ax.plot(data2["Adj Close"], label=ticker2, linewidth=2)
+            ax.set_title("Evolución de precios ajustados")
+            ax.legend()
+            st.pyplot(fig)
+
+            # 📊 Distribución conjunta
+            st.subheader("📊 Relación entre los rendimientos")
+            fig2, ax2 = plt.subplots(figsize=(7, 5))
+            sns.scatterplot(x=data1["Daily Return"], y=data2["Daily Return"], ax=ax2)
+            ax2.set_xlabel(f"Rendimientos {ticker1}")
+            ax2.set_ylabel(f"Rendimientos {ticker2}")
+            ax2.set_title("Correlación de rendimientos")
+            st.pyplot(fig2)
+
+            # 🧠 Conclusión automática
+            st.markdown("### 📈 Conclusión del análisis")
+            if corr > 0.7:
+                st.info(f"Los rendimientos de *{ticker1}* y *{ticker2}* están fuertemente correlacionados — se mueven en la misma dirección.")
+            elif corr > 0.3:
+                st.warning(f"Existe una correlación moderada entre *{ticker1}* y *{ticker2}*.")
+            else:
+                st.success(f"Los rendimientos de *{ticker1}* y *{ticker2}* son poco o nada correlacionados — buena opción para diversificar.")
 
 # 🪪 Footer
 st.markdown("---")
-st.markdown("Desarrollado con ❤️ por *Angie* | Fuente de datos: Yahoo Finance")
+st.markdown("<p style='text-align:center; color:gray;'>© 2025 FinSight | Desarrollado por Angie</p>", unsafe_allow_html=True)
