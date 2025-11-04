@@ -7,10 +7,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ========== CONFIGURACIÓN INICIAL ==========
-st.set_page_config(page_title="FinanSmart", page_icon="📊")
+st.set_page_config(page_title="FinSight", page_icon="📊")
 
 # ========== TÍTULO ==========
-st.title("📊 FinanSmart - Análisis de Inversiones")
+st.title("📊 FinSight - Análisis de Portafolio Rentabilidad y Riesgo.")
 st.write("Aplicación simple para analizar acciones")
 st.markdown("---")
 
