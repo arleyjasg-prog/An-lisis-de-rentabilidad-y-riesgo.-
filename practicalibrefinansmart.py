@@ -1,5 +1,4 @@
-# FinanSmart - Análisis de Portafolio Simple
-# Proyecto para principiantes en Python
+# FinSight - Análisis de Portafolio Rentabilidad y Riesgo.
 
 import streamlit as st
 import yfinance as yf
