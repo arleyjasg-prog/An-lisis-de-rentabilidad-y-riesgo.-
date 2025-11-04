@@ -27,7 +27,7 @@ if run_button:
     st.header(f"Análisis Comparativo para: {', '.join(tickers_list)}")
 
     try:
-        data = yf.download(tickers_list, start=start_date, end=end_date)['Adj Close']
+        data = yf.download(tickers_list, start=start_date, end=end_date)['Close']
         
         # Manejar el caso de un solo ticker para que la estructura de datos sea consistente
         if len(tickers_list) == 1:
@@ -62,7 +62,7 @@ if run_button:
             st.subheader("Evolución de la Rentabilidad Acumulada")
             st.line_chart(cumulative_returns)
 
-            st.subheader("Datos Históricos (Precio de Cierre Ajustado)")
+            st.subheader("Datos Históricos (Precio de Cierre)")
             st.dataframe(data.style.format("{:.2f}"))
             
             st.subheader("Rentabilidades Diarias")
